@@ -1,0 +1,14 @@
+[package]
+name = "app"
+version = "0.1.0"
+edition = "2021"
+
+[features]
+ssr     = [ "sycamore/ssr" ]
+hydrate = [ "sycamore/hydrate" ]
+
+[dependencies]
+console_error_panic_hook = "0.1.7"
+console_log = "0.2"
+log         = "0.4"
+sycamore    = "0.8"
