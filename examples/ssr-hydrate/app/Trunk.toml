@@ -1,0 +1,9 @@
+[build]
+
+# A public url prefix under which the WASM and JavaScript assets will be
+# available. The path given here *must* match route used by `axum` to serve
+# WASM app `dist` directory.
+#
+# The exception is trailing slash that need to be present here, but no in the
+# `axum` route configuration.
+public_url = "/app/"
