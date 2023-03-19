@@ -26,3 +26,7 @@ $ cargo run
 ```
 
 Open the `127.0.0.1:3000` to access SSR rendered and hydrated application.
+
+
+Architecture Overview
+--------------------------------------------------------------------------------
