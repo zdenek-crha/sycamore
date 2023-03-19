@@ -4,6 +4,7 @@ use std::sync::Arc;
 use tower_http::services::ServeDir;
 
 use axum::extract::Extension;
+use axum::extract::Query;
 use axum::routing::get;
 use axum::response::Html;
 use axum::response::IntoResponse;
@@ -27,6 +28,7 @@ async fn main() -> anyhow::Result<()> {
     // components
     let app = app.layer(Extension(Arc::new(template)));
 
+    println!("listening on {}", socket);
     axum::Server::bind(&socket)
         .serve(app.into_make_service())
         .await?;
@@ -34,11 +36,29 @@ async fn main() -> anyhow::Result<()> {
     Ok(())
 }
 
-/// Index endpoint handler that renders components via SSR and wraps them in index.html template
-pub async fn index(Extension(template): Extension<Arc<Template>>) -> impl IntoResponse {
-    let component = sycamore::render_to_string(app::App);
+#[derive(serde::Deserialize)]
+pub struct IndexQuery {
+    count: Option<i32>,
+}
 
-    Html(template.render(component))
+/// Index endpoint handler that renders components via SSR and wraps them in index.html template
+pub async fn index(
+    Extension(template): Extension<Arc<Template>>,
+    Query(query): Query<IndexQuery>,
+) -> impl IntoResponse
+{
+    let range = 0..query.count.unwrap_or(1);
+    let comp  = sycamore::render_to_string(|cx| sycamore::view!{ cx, app::App {
+        (sycamore::view::View::new_fragment(
+            range.clone()
+                .map(|idx| sycamore::view!{ cx,
+                    app::Counter(label=format!("hydrated counter {}", idx), value=idx)
+                })
+                .collect()
+        ))
+    }});
+
+    Html(template.render(comp))
 }
 
 /// Template of an index HTML response
@@ -54,7 +74,7 @@ pub async fn index(Extension(template): Extension<Arc<Template>>) -> impl IntoRe
 ///
 /// We won't be using Trunk generated index.html directly, but we can re-use it as template. We
 /// read it from WASM dist directory and split it on `<body>` string. Then we can 'sandwich' any
-/// components rendered by SSR into this 'template'. 
+/// components rendered by SSR into this 'template'.
 ///
 /// To pass the [`Template`] into relevant endpoint handlers, we will use
 /// [`axum::extract::Extension`]
